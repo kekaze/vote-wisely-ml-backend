@@ -1,11 +1,30 @@
+import os
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from pydantic_settings import BaseSettings
 from sentence_transformers import SentenceTransformer
-app = FastAPI()
+from supabase import create_client, Client
 
-model = SentenceTransformer('all-MiniLM-L6-v2')
+app = FastAPI()
 class EmbeddingRequest(BaseModel):
     criteria: str
+
+class Settings(BaseSettings):
+    supabase_url: str
+    supabase_key: str
+
+    class Config:
+        env_file = ".env"
+
+settings = Settings()
+
+
+model = SentenceTransformer('all-MiniLM-L6-v2')
+
+url: str = settings.supabase_url
+key: str = settings.supabase_key
+supabase: Client = create_client(url, key)
 
 @app.post(path="/embed")
 def generate_embedding(data: EmbeddingRequest):
@@ -14,3 +33,12 @@ def generate_embedding(data: EmbeddingRequest):
         return {"embedding": embedding}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post(path="/search")
+def search_candidates():
+    response = (
+        supabase.table("planets")
+        .select("*")
+        .execute()
+        # for replacement of official query
+    )
