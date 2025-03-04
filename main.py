@@ -7,18 +7,18 @@ from sentence_transformers import SentenceTransformer
 from supabase import create_client, Client
 
 app = FastAPI()
+
 class EmbeddingRequest(BaseModel):
     criteria: str
-
 class Settings(BaseSettings):
     supabase_url: str
     supabase_key: str
+    service_key: str
 
     class Config:
         env_file = ".env"
 
 settings = Settings()
-
 
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
@@ -33,12 +33,3 @@ def generate_embedding(data: EmbeddingRequest):
         return {"embedding": embedding}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-@app.post(path="/search")
-def search_candidates():
-    response = (
-        supabase.table("planets")
-        .select("*")
-        .execute()
-        # for replacement of official query
-    )
